@@ -1,0 +1,45 @@
+from keras.models import Sequential
+from keras.layers import LSTM, Dense, Embedding
+from keras.preprocessing.text import Tokenizer
+from keras.utils import pad_sequences
+import numpy as np
+
+data = """Machine learning is a field of artificial intelligence that uses statistical techniques to give computer systems the ability to learn."""
+
+# Tokenize
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts([data])
+word_index = tokenizer.word_index
+sequence = tokenizer.texts_to_sequences([data])[0]
+
+# Create input-output pairs
+sequences = []
+for i in range(1, len(sequence)):
+    seq = sequence[:i+1]
+    sequences.append(seq)
+
+# Pad sequences
+max_len = max(len(x) for x in sequences)
+sequences = pad_sequences(sequences, maxlen=max_len)
+
+# Split into input and output
+sequences = np.array(sequences)
+X, y = sequences[:, :-1], sequences[:, -1]
+
+# Build model
+model = Sequential()
+model.add(Embedding(input_dim=len(word_index)+1, output_dim=10, input_length=max_len-1))
+model.add(LSTM(50))
+model.add(Dense(len(word_index)+1, activation='softmax'))
+
+model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
+model.fit(X, y, epochs=500, verbose=0)
+
+# Predict next word
+seed_text = "Machine learning is"
+tokenized = tokenizer.texts_to_sequences([seed_text])[0]
+tokenized = pad_sequences([tokenized], maxlen=max_len-1)
+predicted_index = model.predict(tokenized, verbose=0).argmax()
+for word, index in word_index.items():
+    if index == predicted_index:
+        print("Next word prediction:", word)
