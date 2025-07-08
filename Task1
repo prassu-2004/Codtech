@@ -1,0 +1,31 @@
+# dynamic_text_summarizer.py
+
+from transformers import pipeline
+
+def summarize_text(text, max_length=130, min_length=30):
+    summarizer = pipeline("summarization")
+    summary = summarizer(text, max_length=max_length, min_length=min_length, do_sample=False)
+    return summary[0]['summary_text']
+
+def main():
+    print("\n--- Text Summarization Tool ---")
+    print("Enter the text you want to summarize (type 'END' on a new line to finish input):\n")
+
+    lines = []
+    while True:
+        line = input()
+        if line.strip().upper() == "END":
+            break
+        lines.append(line)
+
+    full_text = " ".join(lines)
+
+    if len(full_text.split()) < 30:
+        print("\n⚠️ Please enter at least 30 words for meaningful summarization.")
+    else:
+        print("\n🔍 Generating summary...\n")
+        summary = summarize_text(full_text)
+        print("📄 Summary:\n", summary)
+
+if __name__ == "__main__":
+    main()
